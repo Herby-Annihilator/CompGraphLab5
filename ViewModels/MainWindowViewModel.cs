@@ -32,7 +32,6 @@ namespace Lab5.ViewModels
 		private string _pathToImage = "";
 		public string PathToImage { get => _pathToImage; set => Set(ref _pathToImage, value); }
 
-		private int _brightnessOld;
 		private int _brightness = 0;
 		public int Brightness
 		{ 
@@ -231,21 +230,6 @@ namespace Lab5.ViewModels
 				if (value < 0) value = 0;
 				bytes[i + 2] = (byte)value;
 			}
-		}
-
-		private int CalculateBrightness(WriteableBitmap bitmap)
-		{
-			int width = bitmap.PixelWidth;
-			int height = bitmap.PixelHeight;
-			int pixelsAmount = bitmap.BackBufferStride * height;
-			byte[] bytes = new byte[pixelsAmount];
-			bitmap.CopyPixels(bytes, bitmap.BackBufferStride, 0);
-			double Y = 0;
-			for (int i = 0; i < bytes.Length; i += 4)
-			{
-				Y += (bytes[i] * 0.114 + 0.5876 * bytes[i + 1] + 0.299 * bytes[i + 2]) / bytes.Length;
-			}
-			return Y > 255 ? 255 : (int)Y;
 		}
 	}
 }
