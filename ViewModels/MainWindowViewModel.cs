@@ -20,6 +20,7 @@ namespace Lab5.ViewModels
 			BinarizeCommand = new LambdaCommand(OnBinarizeCommandExecuted, CanBinarizeCommandExecute);
 			FiftyShadesOfGrayCommand = new LambdaCommand(OnFiftyShadesOfGrayExecuted, CanFiftyShadesOfGrayExecute);
 			SetBrightnessCommand = new LambdaCommand(OnSetBrightnessCommandExecuted, CanSetBrightnessCommandExecute);
+			SetContrastCommand = new LambdaCommand(OnSetContrastCommandExecuted, CanSetContrastCommandExecute);
 		}
 
 		#region Properties
@@ -44,8 +45,17 @@ namespace Lab5.ViewModels
 			}
 		}
 
-		private int _contrast = 0;
-		public int Contrast { get => _contrast; set => Set(ref _contrast, value); }
+		private double _contrast = 1;
+		public double Contrast 
+		{ 
+			get => _contrast;
+			set
+			{
+				Set(ref _contrast, value);
+				if (CanSetContrastCommandExecute(null))
+					OnSetContrastCommandExecuted(null);
+			}
+		}
 
 		private WriteableBitmap _imageSourceOld;
 		private WriteableBitmap _imageSource;
@@ -152,6 +162,23 @@ namespace Lab5.ViewModels
 		}
 		private bool CanSetBrightnessCommandExecute(object p) => ImageSource != null;
 		#endregion
+
+		#region SetContrastCommand
+		public ICommand SetContrastCommand { get; }
+		private void OnSetContrastCommandExecuted(object p)
+		{
+			try
+			{
+				ImageSource = _imageSourceOld.CloneCurrentValue();
+				ProcessImage(ImageSource, SetContrast);
+			}
+			catch (Exception e)
+			{
+				Status = e.Message;
+			}
+		}
+		private bool CanSetContrastCommandExecute(object p) => ImageSource != null;
+		#endregion
 		#endregion
 
 		private void ProcessImage(WriteableBitmap bitmap, Action<byte[]> action)
@@ -230,6 +257,55 @@ namespace Lab5.ViewModels
 				if (value < 0) value = 0;
 				bytes[i + 2] = (byte)value;
 			}
+		}
+
+		private void SetContrast(byte[] bytes)
+		{
+			double value;
+			byte rAvg, gAvg, bAvg;
+			CalculateAverageRgb(out rAvg, out gAvg, out bAvg, bytes);
+			for (int i = 0; i < bytes.Length; i += 4)
+			{
+				value = bytes[i];
+				value = Contrast * (value - bAvg + bAvg);
+				if (value > 255) value = 255;
+				if (value < 0) value = 0;
+				bytes[i] = (byte)value;
+
+				value = bytes[i + 1];
+				value = Contrast * (value - gAvg) + gAvg;
+				if (value > 255) value = 255;
+				if (value < 0) value = 0;
+				bytes[i + 1] = (byte)value;
+
+				value = bytes[i + 2];
+				value = Contrast * (value - rAvg) + rAvg;
+				if (value > 255) value = 255;
+				if (value < 0) value = 0;
+				bytes[i + 2] = (byte)value;
+			}
+		}
+
+		private void CalculateAverageRgb(out byte r, out byte g, out byte b, byte[] bytes)
+		{
+			r = 0;
+			g = 0;
+			b = 0;
+			int rAvg = 0;
+			int gAvg = 0;
+			int bAvg = 0;
+			for (int i = 0; i < bytes.Length; i += 4)
+			{
+				rAvg += bytes[i + 2];
+				gAvg += bytes[i + 1];
+				bAvg += bytes[i];
+			}
+			rAvg /= bytes.Length;
+			gAvg /= bytes.Length;
+			bAvg /= bytes.Length;
+			r = (byte)rAvg;
+			g = (byte)gAvg;
+			b = (byte)bAvg;
 		}
 	}
 }
