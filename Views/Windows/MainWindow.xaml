@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:local="clr-namespace:Lab5"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="606" Width="834"
@@ -30,7 +31,7 @@
                 <Image VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Source="{Binding ImageSource}"/>
             </GroupBox>
             <GroupBox Grid.Row="0" Grid.Column="1" Header="Графики">
-                
+                <oxy:PlotView Model="{Binding Plot}"/>
             </GroupBox>
             <GroupBox Grid.Row="1" Grid.Column="1" Header="Управление">
                 <Grid>

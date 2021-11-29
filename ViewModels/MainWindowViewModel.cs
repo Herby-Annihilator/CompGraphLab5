@@ -6,6 +6,10 @@ using System.Windows.Markup;
 using System;
 using System.Windows.Media.Imaging;
 using System.Windows;
+using OxyPlot;
+using OxyPlot.Axes;
+using System.Collections.Generic;
+using OxyPlot.Series;
 
 namespace Lab5.ViewModels
 {
@@ -21,6 +25,7 @@ namespace Lab5.ViewModels
 			FiftyShadesOfGrayCommand = new LambdaCommand(OnFiftyShadesOfGrayExecuted, CanFiftyShadesOfGrayExecute);
 			SetBrightnessCommand = new LambdaCommand(OnSetBrightnessCommandExecuted, CanSetBrightnessCommandExecute);
 			SetContrastCommand = new LambdaCommand(OnSetContrastCommandExecuted, CanSetContrastCommandExecute);
+			InitPlotModel(Plot);
 		}
 
 		#region Properties
@@ -60,6 +65,8 @@ namespace Lab5.ViewModels
 		private WriteableBitmap _imageSourceOld;
 		private WriteableBitmap _imageSource;
 		public WriteableBitmap ImageSource { get => _imageSource; set => Set(ref _imageSource, value); }
+
+		public PlotModel Plot { get; set; } = new PlotModel();
 		#endregion
 
 		#region Commands
@@ -71,6 +78,12 @@ namespace Lab5.ViewModels
 			{
 				ImageSource = new WriteableBitmap(new BitmapImage(new Uri(PathToImage)));
 				_imageSourceOld = ImageSource.CloneCurrentValue();
+				int width = ImageSource.PixelWidth;
+				int height = ImageSource.PixelHeight;
+				int pixelsAmount = ImageSource.BackBufferStride * height;
+				byte[] bytes = new byte[pixelsAmount];
+				ImageSource.CopyPixels(bytes, ImageSource.BackBufferStride, 0);
+				CreateBrightnessHistogram(bytes);
 			}
 			catch (Exception e)
 			{
@@ -189,6 +202,7 @@ namespace Lab5.ViewModels
 			byte[] bytes = new byte[pixelsAmount];
 			bitmap.CopyPixels(bytes, bitmap.BackBufferStride, 0);
 			action.Invoke(bytes);
+			CreateBrightnessHistogram(bytes);
 			Int32Rect rect = new Int32Rect(0, 0, width, height);
 			bitmap.WritePixels(rect, bytes, bitmap.BackBufferStride, 0);
 		}
@@ -288,9 +302,6 @@ namespace Lab5.ViewModels
 
 		private void CalculateAverageRgb(out byte r, out byte g, out byte b, byte[] bytes)
 		{
-			r = 0;
-			g = 0;
-			b = 0;
 			int rAvg = 0;
 			int gAvg = 0;
 			int bAvg = 0;
@@ -306,6 +317,62 @@ namespace Lab5.ViewModels
 			r = (byte)rAvg;
 			g = (byte)gAvg;
 			b = (byte)bAvg;
+		}
+
+		private void InitPlotModel(PlotModel model)
+		{
+			model.Title = "Гистограмма яркости";
+			LinearAxis bottom = new LinearAxis
+			{
+				MajorGridlineStyle = LineStyle.Solid,
+				MinorGridlineStyle = LineStyle.Dot,
+				TickStyle = TickStyle.Outside,
+				Position = AxisPosition.Bottom,
+				Title = "Число таких пикселей"
+			};
+			model.Axes.Add(bottom);
+			CategoryAxis left = new CategoryAxis
+			{
+				Position = AxisPosition.Left,
+				MajorGridlineStyle = LineStyle.Solid,
+				MinorGridlineStyle = LineStyle.Dot,
+				TickStyle = TickStyle.Outside,
+				Title = "Яркость пикселя"
+			};
+			model.Axes.Add(left);
+		}
+
+		private int[] NumberOfBrightnessRepetitions(byte[] bytes)
+		{
+			int brightness;
+			int[] repetitions = new int[256];
+			for (int i = 0; i < bytes.Length; i += 4)
+			{
+				brightness = (int)(bytes[i + 2] * 0.299 + bytes[i + 1] * 0.5876 + bytes[i] * 0.114);
+				if (brightness > 255) brightness = 255;
+				if (brightness < 0) brightness = 0;
+				repetitions[brightness]++;
+			}
+			return repetitions;
+		}
+
+		private void CreateBrightnessHistogram(byte[] bytes)
+		{
+			Plot.Series.Clear();
+			int[] repetitions = NumberOfBrightnessRepetitions(bytes);
+			BarSeries barSeries = new BarSeries();
+			BarItem item;
+			for (int i = 0; i < repetitions.Length; i++)
+			{
+				item = new BarItem
+				{
+					CategoryIndex = i,
+					Value = repetitions[i]
+				};
+				barSeries.Items.Add(item);
+			}
+			Plot.Series.Add(barSeries);
+			Plot.InvalidatePlot(true);
 		}
 	}
 }
