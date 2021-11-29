@@ -25,6 +25,8 @@ namespace Lab5.ViewModels
 			FiftyShadesOfGrayCommand = new LambdaCommand(OnFiftyShadesOfGrayExecuted, CanFiftyShadesOfGrayExecute);
 			SetBrightnessCommand = new LambdaCommand(OnSetBrightnessCommandExecuted, CanSetBrightnessCommandExecute);
 			SetContrastCommand = new LambdaCommand(OnSetContrastCommandExecuted, CanSetContrastCommandExecute);
+			SetDefaultCommand = new LambdaCommand(OnSetDefaultCommandExecuted, CanSetDefaultCommandExecute);
+			AddNoiseCommand = new LambdaCommand(OnAddNoiseCommandExecuted, CanAddNoiseCommandExecute);
 			InitPlotModel(Plot);
 		}
 
@@ -93,6 +95,24 @@ namespace Lab5.ViewModels
 		private bool CanLoadImageCommandExecute(object p) => !string.IsNullOrWhiteSpace(PathToImage);
 		#endregion
 
+		#region SetDefaultCommand
+		public ICommand SetDefaultCommand { get; }
+		private void OnSetDefaultCommandExecuted(object p)
+		{
+			try
+			{
+				LoadImageCommand.Execute(p);
+				Contrast = 1;
+				Brightness = 0;
+			}
+			catch (Exception e)
+			{
+				Status = e.Message;
+			}
+		}
+		private bool CanSetDefaultCommandExecute(object p) => !string.IsNullOrWhiteSpace(PathToImage);
+		#endregion
+
 		#region BrowseImageCommand
 		public ICommand BrowseImageCommand { get; }
 		private void OnBrowseImageCommandExecuted(object p)
@@ -124,6 +144,8 @@ namespace Lab5.ViewModels
 		}
 		private bool CanGetNegativeImageCommandExecute(object p) => ImageSource != null;
 		#endregion
+
+
 
 		#region BinarizeCommand
 		public ICommand BinarizeCommand { get; }
@@ -191,6 +213,23 @@ namespace Lab5.ViewModels
 			}
 		}
 		private bool CanSetContrastCommandExecute(object p) => ImageSource != null;
+		#endregion
+
+		#region AddNoiseCommand
+		public ICommand AddNoiseCommand { get; }
+		private void OnAddNoiseCommandExecuted(object p)
+		{
+			try
+			{
+				ProcessImage(ImageSource, AddNoise);
+				_imageSourceOld = ImageSource.CloneCurrentValue();
+			}
+			catch (Exception e)
+			{
+				Status = e.Message;
+			}
+		}
+		private bool CanAddNoiseCommandExecute(object p) => ImageSource != null;
 		#endregion
 		#endregion
 
@@ -373,6 +412,21 @@ namespace Lab5.ViewModels
 			}
 			Plot.Series.Add(barSeries);
 			Plot.InvalidatePlot(true);
+		}
+
+		private void AddNoise(byte[] bytes)
+		{
+			int noiseAmount = bytes.Length / 400;
+			int intSize = bytes.Length / 4;
+			Random random = new Random();
+			int pixelIndex;
+			for (int i = 0; i < noiseAmount; i++)
+			{
+				pixelIndex = random.Next(0, intSize);
+				bytes[4 * pixelIndex + 2] = 255;
+				bytes[4 * pixelIndex + 1] = 255;
+				bytes[4 * pixelIndex] = 255;
+			}
 		}
 	}
 }

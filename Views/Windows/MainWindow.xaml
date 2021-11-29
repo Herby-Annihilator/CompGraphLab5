@@ -82,13 +82,14 @@
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Brightness}"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Значение контрастности"/>
-                    <Slider Grid.Column="1" Grid.Row="2" Maximum="3" Minimum="0" Value="{Binding Contrast}"/>
+                    <Slider Grid.Column="1" Grid.Row="2" Maximum="100" Minimum="0" Value="{Binding Contrast}"/>
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding Contrast}"/>
 
                     <Button Grid.Row="3" Grid.Column="0" Content="Бинаризация" Command="{Binding BinarizeCommand}"/>
                     <Button Grid.Row="3" Grid.Column="1" Content="Оттенки серого" Command="{Binding FiftyShadesOfGrayCommand}"/>
-                    <Button Grid.Row="3" Grid.Column="3" Content="Негатив" Command="{Binding GetNegativeImageCommand}"/>
-                    <Button Grid.Row="4" Grid.Column="3" Content="Вернуть как было"/>
+                    <Button Grid.Row="3" Grid.Column="2" Content="Негатив" Command="{Binding GetNegativeImageCommand}"/>
+                    <Button Grid.Row="4" Grid.Column="2" Content="Вернуть как было" Command="{Binding SetDefaultCommand}"/>
+                    <Button Grid.Row="4" Grid.Column="1" Content="Добавить шумы" Command="{Binding AddNoiseCommand}"/>
                 </Grid>
             </GroupBox>
         </Grid>
