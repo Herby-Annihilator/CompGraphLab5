@@ -320,7 +320,7 @@ namespace Lab5.ViewModels
 			for (int i = 0; i < bytes.Length; i += 4)
 			{
 				value = bytes[i];
-				value = Contrast * (value - bAvg + bAvg);
+				value = Contrast * (value - bAvg) + bAvg;
 				if (value > 255) value = 255;
 				if (value < 0) value = 0;
 				bytes[i] = (byte)value;
@@ -350,9 +350,9 @@ namespace Lab5.ViewModels
 				gAvg += bytes[i + 1];
 				bAvg += bytes[i];
 			}
-			rAvg /= bytes.Length;
-			gAvg /= bytes.Length;
-			bAvg /= bytes.Length;
+			rAvg /= bytes.Length / 4;
+			gAvg /= bytes.Length / 4;
+			bAvg /= bytes.Length / 4;
 			r = (byte)rAvg;
 			g = (byte)gAvg;
 			b = (byte)bAvg;
